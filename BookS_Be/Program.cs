@@ -1,4 +1,5 @@
 using BookS_Be.Data;
+using BookS_Be.Middlewares;
 using BookS_Be.Repositories;
 using BookS_Be.Repositories.Interfaces;
 using BookS_Be.Services;
@@ -54,6 +55,9 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+// Add request/response logging middleware
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -61,7 +65,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "BookStore API V1");
-        c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+        c.RoutePrefix = "swagger"; // Swagger UI at "/swagger"
     });
 }
 
