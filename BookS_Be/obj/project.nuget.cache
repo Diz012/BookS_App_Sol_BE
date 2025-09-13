@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "4uUBiZSGr4c=",
+  "dgSpecHash": "oUe8IqxCNe4=",
   "success": true,
   "projectFilePath": "C:\\Users\\Administrator\\Documents\\Workspace\\BookS_Be\\BookS_Be\\BookS_Be.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Administrator\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\dnsclient\\1.6.1\\dnsclient.1.6.1.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.20\\microsoft.aspnetcore.openapi.8.0.20.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
