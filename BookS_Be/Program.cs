@@ -1,9 +1,56 @@
+using BookS_Be.Data;
+using BookS_Be.Repositories;
+using BookS_Be.Repositories.Interfaces;
+using BookS_Be.Services;
+using BookS_Be.Services.Interfaces;
+using MongoDB.Driver;
+using Microsoft.OpenApi.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "BookStore API",
+        Version = "v1",
+        Description = "A simple ASP.NET Core Web API for BookStore management",
+        Contact = new OpenApiContact
+        {
+            Name = "BookStore Team",
+            Email = "support@bookstore.com"
+        }
+    });
+    
+    // Enable XML comments for better documentation
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+});
+
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("MongoDB");
+    return new MongoClient(connectionString);
+});
+
+builder.Services.AddScoped(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    var databaseName = builder.Configuration.GetValue<string>("MongoDB:DatabaseName");
+    return client.GetDatabase(databaseName);
+});
+
+builder.Services.AddScoped<AppDbContext>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -11,34 +58,15 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BookStore API V1");
+        c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+    });
 }
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
