@@ -1,1 +1,81 @@
-﻿
+﻿# .NET build output
+bin/
+obj/
+
+# Rider project files
+.idea/
+*.sln.iml
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Mac OS files
+.DS_Store
+
+# Windows files
+Thumbs.db
+
+# Logs
+*.log
+
+# NuGet packages
+*.nupkg
+# NuGet restore files
+project.lock.json
+project.fragment.lock.json
+
+# Others
+*.swp
+*.bak
+*.tmp
+*.orig
+
+# User-specific files
+*.vspscc
+*.vssscc
+
+# Build results
+*.dll
+*.exe
+*.app
+*.pdb
+*.cache
+*.mdb
+*.db
+
+# Test results
+TestResults/
+
+# Configuration files
+appsettings.*.json
+!appsettings.json
+
+# Rider
+.idea/
+*.sln.iml
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# DotCover
+*.dotCover
+
+# Backup & temp files
+*.bak
+*.tmp
+*.temp
+~$*
+
+# Others
+*.vsix
+*.vscode/
+
