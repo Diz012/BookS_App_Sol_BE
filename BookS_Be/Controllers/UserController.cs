@@ -1,6 +1,7 @@
 ﻿using BookS_Be.Models;
 using BookS_Be.Services.Interfaces;
 using BookS_Be.DTOs;
+using BookS_Be.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookS_Be.Controllers;
@@ -11,7 +12,7 @@ namespace BookS_Be.Controllers;
 [ApiController]
 [Route("api/user")]
 [Produces("application/json")]
-public class UserController(IUserService userService) : ControllerBase
+public class UserController(IUserService userService, JwtHelper jwtHelper) : ControllerBase
 {
     /// <summary>
     /// Register a new user
@@ -67,5 +68,43 @@ public class UserController(IUserService userService) : ControllerBase
             return StatusCode(500, new { message = "An error occurred while creating the user", details = e.Message });
         }
     }
+    
+    /// <summary>
+    /// Authenticate a user and generate a JWT token
+    /// </summary>
+    /// <param name="loginDto">User login data</param>
+    /// <returns>JWT token if authentication is successful</returns>
+    /// <response code="200">Returns the JWT token</response>
+    /// <response code="400">If the login data is invalid</response>
+    /// <response code="401">If authentication fails</response>
+    /// <response code="500">If there was an internal server error</response>
+    [HttpPost("login")]
+    public async Task<ActionResult> Login([FromBody] LoginUserDto loginDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await userService.GetUserByEmailAsync(loginDto.Email);
+            
+            if (user == null)
+            {
+                return Unauthorized(new { message = "Invalid email" });
+            }
+            
+            if(!PasswordHelper.VerifyPassword(loginDto.Password, user.PasswordHash))
+                return Unauthorized(new { message = "Invalid password" });
+            
+            var token = jwtHelper.GenerateToken(user.Id, loginDto.Email);
+            
+            return Ok(new { message = "Login successful", token = token});
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+    
 
 }
