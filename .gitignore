@@ -1,6 +1,6 @@
 ﻿# .NET build output
-bin/
-obj/
+BookS_Be/bin/
+BookS_Be/obj/
 
 # Rider project files
 .idea/
