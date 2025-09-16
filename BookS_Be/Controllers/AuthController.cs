@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using BookS_Be.Models;
+﻿using BookS_Be.Models;
 using BookS_Be.Services.Interfaces;
 using BookS_Be.DTOs;
 using BookS_Be.Helpers;
@@ -59,6 +58,8 @@ public class AuthController (IUserService userService, IAuthService authService,
                 try
                 {
                     await emailService.SendEmailConfirmationAsync(user.Email, token);
+                    Console.WriteLine($"Verification email sent to {user.Email}");
+
                 }
                 catch (Exception e)
                 {
@@ -121,9 +122,9 @@ public class AuthController (IUserService userService, IAuthService authService,
             if(!PasswordHelper.VerifyPassword(loginDto.Password, user.PasswordHash))
                 return Unauthorized(new { message = "Invalid password" });
             
-            var token = jwtHelper.GenerateToken(user.Id, loginDto.Email);
+            var token = jwtHelper.GenerateToken(user.Id ?? throw new InvalidOperationException(), loginDto.Email);
             
-            return Ok(new { message = "Login successful", token = token});
+            return Ok(new { message = "Login successful", token});
         }
         catch (Exception e)
         {

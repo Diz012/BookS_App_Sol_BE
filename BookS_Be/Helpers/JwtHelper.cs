@@ -2,28 +2,16 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Configuration;
 
 namespace BookS_Be.Helpers;
 
-public class JwtHelper
+public class JwtHelper(IConfiguration configuration)
 {
-    private readonly IConfiguration _configuration;
-    private readonly string _secretKey;
-    private readonly string _emailSecretKey;
-    private readonly string _issuer;
-    private readonly string _audience;
-    private readonly int _expirationHours;
-
-    public JwtHelper(IConfiguration configuration)
-    {
-        _configuration = configuration;
-        _secretKey = _configuration["JWT:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not found in user secrets");
-        _emailSecretKey = _configuration["JWT:EmailSecretKey"] ?? throw new InvalidOperationException("JWT EmailSecretKey not found in user secrets");
-        _issuer = _configuration["JWT:Issuer"] ?? "BookS-API";
-        _audience = _configuration["JWT:Audience"] ?? "BookS-Client";
-        _expirationHours = int.Parse(_configuration["JWT:ExpirationHours"] ?? "24");
-    }
+    private readonly string _secretKey = configuration["JWT:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not found in user secrets");
+    private readonly string _emailSecretKey = configuration["JWT:EmailSecretKey"] ?? throw new InvalidOperationException("JWT EmailSecretKey not found in user secrets");
+    private readonly string _issuer = configuration["JWT:Issuer"] ?? "BookS-API";
+    private readonly string _audience = configuration["JWT:Audience"] ?? "BookS-Client";
+    private readonly int _expirationHours = int.Parse(configuration["JWT:ExpirationHours"] ?? "24");
 
     /// <summary>
     /// Generates a JWT token for the specified user
