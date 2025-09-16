@@ -1,0 +1,166 @@
+﻿using System.Security.Claims;
+using BookS_Be.Models;
+using BookS_Be.Services.Interfaces;
+using BookS_Be.DTOs;
+using BookS_Be.Helpers;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BookS_Be.Controllers;
+
+/// <summary>
+/// Authentication controller for user registration and login
+/// </summary>
+[ApiController]
+[Route("api/auth")]
+[Produces("application/json")]
+public class AuthController (IUserService userService, IAuthService authService,IEmailService emailService, JwtHelper jwtHelper) : ControllerBase
+{
+     /// <summary>
+    /// Register a new user
+    /// </summary>
+    /// <param name="registerDto">User registration data</param>
+    /// <returns>Created user information</returns>
+    /// <response code="201">Returns the newly created user</response>
+    /// <response code="400">If the user data is invalid</response>
+    /// <response code="409">If user with email already exists</response>
+    /// <response code="500">If there was an internal server error</response>
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(UserResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<UserResponseDto>> Register([FromBody] RegisterUserDto registerDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var existingUser = await userService.GetUserByEmailAsync(registerDto.Email);
+            if (existingUser != null)
+            {
+                return Conflict(new { message = "User with this email already exists" });
+            }
+
+            var user = new User
+            {
+                Username = registerDto.Username,
+                Email = registerDto.Email,
+                PasswordHash = registerDto.Password,
+                FullName = registerDto.FullName ?? string.Empty
+            };
+
+            await userService.CreateUserAsync(user);
+
+            var token = jwtHelper.GenerateEmailToken(user.Email);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await emailService.SendEmailConfirmationAsync(user.Email, token);
+                }
+                catch (Exception e)
+                {
+                    // Log the exception (you can use a logging framework here)
+                    Console.WriteLine($"Failed to send verification email: {e.Message}");
+                }
+            });            
+            var userResponse = new UserResponseDto
+            {
+                Username = user.Username,
+                Email = user.Email,
+                FullName = user.FullName,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
+            
+            
+            
+            return StatusCode(201, userResponse);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, new { message = "An error occurred while creating the user", details = e.Message });
+        }
+    }
+    
+    /// <summary>
+    /// Authenticate a user and generate a JWT token
+    /// </summary>
+    /// <param name="loginDto">User login data</param>
+    /// <returns>JWT token if authentication is successful</returns>
+    /// <response code="200">Returns the JWT token</response>
+    /// <response code="400">If the login data is invalid</response>
+    /// <response code="401">If authentication fails</response>
+    /// <response code="500">If there was an internal server error</response>
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> Login([FromBody] LoginUserDto loginDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await userService.GetUserByEmailAsync(loginDto.Email);
+            
+            if (user == null)
+            {
+                return Unauthorized(new { message = "Invalid email" });
+            }
+
+            if (!user.IsEmailVerified)
+            {
+                return Unauthorized(new { message = "Email not verified. Please verify your email before logging in." });
+            }
+            
+            if(!PasswordHelper.VerifyPassword(loginDto.Password, user.PasswordHash))
+                return Unauthorized(new { message = "Invalid password" });
+            
+            var token = jwtHelper.GenerateToken(user.Id, loginDto.Email);
+            
+            return Ok(new { message = "Login successful", token = token});
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Verify user's email using a token
+    /// </summary>
+    /// query param token: Email verification token
+    /// <returns>Success message if email is verified</returns>
+    /// <response code="200">If email is successfully verified</response>
+    /// <response code="400">If the token is invalid or expired</response>
+    /// <response code="500">If there was an internal server error</response>
+    [HttpGet("verify-email")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> VerifyEmail([FromQuery] string token)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(token))
+                return BadRequest("Token is required");
+
+            var updated = await authService.ConfirmEmailAsync(token);
+            
+            if (!updated) 
+                return BadRequest("Invalid or expired token");
+            
+            return Ok(new { message = "Email confirmed successfully" });
+
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }       
+    }
+}
