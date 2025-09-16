@@ -26,4 +26,7 @@ public class User
     
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    
+    [BsonElement("isEmailVerified")]
+    public bool IsEmailVerified { get; set; } = false;
 }

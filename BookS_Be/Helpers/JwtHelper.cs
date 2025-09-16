@@ -10,6 +10,7 @@ public class JwtHelper
 {
     private readonly IConfiguration _configuration;
     private readonly string _secretKey;
+    private readonly string _emailSecretKey;
     private readonly string _issuer;
     private readonly string _audience;
     private readonly int _expirationHours;
@@ -18,6 +19,7 @@ public class JwtHelper
     {
         _configuration = configuration;
         _secretKey = _configuration["JWT:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not found in user secrets");
+        _emailSecretKey = _configuration["JWT:EmailSecretKey"] ?? throw new InvalidOperationException("JWT EmailSecretKey not found in user secrets");
         _issuer = _configuration["JWT:Issuer"] ?? "BookS-API";
         _audience = _configuration["JWT:Audience"] ?? "BookS-Client";
         _expirationHours = int.Parse(_configuration["JWT:ExpirationHours"] ?? "24");
@@ -60,7 +62,65 @@ public class JwtHelper
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
     }
+    
+    public string GenerateEmailToken(string email)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_emailSecretKey);
 
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Email, email),
+            new Claim(JwtRegisteredClaimNames.Sub, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat, 
+                new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), 
+                ClaimValueTypes.Integer64)
+        };
+
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddHours(1),
+            Issuer = _issuer,
+            Audience = _audience,
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature)
+        };
+
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
+    }
+    
+    public ClaimsPrincipal? ValidateEmailToken(string token)
+    {
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_emailSecretKey);
+
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = _issuer,
+                ValidateAudience = true,
+                ValidAudience = _audience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+            return principal;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+    
     /// <summary>
     /// Validates a JWT token and returns the claims principal
     /// </summary>

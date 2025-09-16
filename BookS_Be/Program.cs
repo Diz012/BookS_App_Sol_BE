@@ -1,6 +1,7 @@
 using BookS_Be.Data;
 using BookS_Be.Helpers;
 using BookS_Be.Middlewares;
+using BookS_Be.Models;
 using BookS_Be.Repositories;
 using BookS_Be.Repositories.Interfaces;
 using BookS_Be.Services;
@@ -9,6 +10,8 @@ using MongoDB.Driver;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -81,6 +84,9 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<AppDbContext>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddControllers();
 
 // Register helpers
