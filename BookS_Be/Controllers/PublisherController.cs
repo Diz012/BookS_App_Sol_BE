@@ -7,6 +7,7 @@ namespace BookS_Be.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Produces("application/json")]
 public class PublisherController(IPublisherService publisherService) : ControllerBase
 {
     /// <summary>

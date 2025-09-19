@@ -10,7 +10,7 @@ public class Book
     public string? Id { get; set; }
     
     [BsonElement("title")]
-    public string Title { get; set; } = string.Empty;
+    public required string Title { get; set; }
     
     [BsonElement("authorId")]
     [BsonRepresentation(BsonType.ObjectId)]
