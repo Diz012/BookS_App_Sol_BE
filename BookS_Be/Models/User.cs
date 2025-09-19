@@ -29,4 +29,7 @@ public class User
     
     [BsonElement("isEmailVerified")]
     public bool IsEmailVerified { get; set; }
+
+    [BsonElement("isAdmin")]
+    public bool IsAdmin { get; set; } = false;
 }
