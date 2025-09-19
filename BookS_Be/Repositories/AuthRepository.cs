@@ -1,5 +1,4 @@
-﻿using BookS_Be.Data;
-using BookS_Be.Repositories.Interfaces;
+﻿using BookS_Be.Repositories.Interfaces;
 
 namespace BookS_Be.Repositories;
 
@@ -15,6 +14,6 @@ public class AuthRepository(IUserRepository userRepository) : IAuthRepository
         }
 
         user.IsEmailVerified = true;
-        await userRepository.UpdateAsync(user.Id, user);
+        await userRepository.UpdateAsync(user.Id ?? throw new InvalidOperationException(), user);
     }
 }

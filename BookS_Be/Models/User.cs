@@ -28,5 +28,8 @@ public class User
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
     [BsonElement("isEmailVerified")]
-    public bool IsEmailVerified { get; set; } = false;
+    public bool IsEmailVerified { get; set; }
+
+    [BsonElement("isAdmin")]
+    public bool IsAdmin { get; set; } = false;
 }
