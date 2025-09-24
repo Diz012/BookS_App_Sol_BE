@@ -50,35 +50,31 @@ public class BookController(IBookService bookService) : ControllerBase
     /// <remarks>
     /// Adds a new book to the system.
     /// </remarks>
-    /// <param name="bookDto"></param>
+    /// <param name="dto"></param>
     /// <response code="201">Book added successfully</response>
     /// <response code="400">If the request is invalid</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost("[action]")]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> AddBook([FromBody]AddBookDto bookDto)
+    public async Task<IActionResult> AddBook([FromForm] AddBookWithFileDto dto)
     {
         try
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var book = new Book()
-            {
-                Title = bookDto.Title,
-                AuthorId = bookDto.AuthorId,
-                PublisherId = bookDto.PublisherId,
-                Isbn = bookDto.Isbn,
-                Price = bookDto.Price,
-                Stock = bookDto.Stock,
-                CategoryIds = bookDto.CategoryIds,
-                Description = bookDto.Description,
-                CoverImageUrl = bookDto.CoverImageUrl,
-                PublishedDate = bookDto.PublishedDate,
-            };
             
-            await bookService.CreateAsync(book);
+            var bookDto = System.Text.Json.JsonSerializer.Deserialize<AddBookDto>(
+                dto.MetaData,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+            
+            if (bookDto == null)
+                return BadRequest(new {message = "Invalid book data."});
+            
+            await bookService.CreateAsync(bookDto, dto.CoverImageFile);
             
             return StatusCode(201, new {message = "Book added successfully."});
         }

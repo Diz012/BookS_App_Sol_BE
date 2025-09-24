@@ -26,7 +26,5 @@ public class AddBookDto
     
     public string Description { get; set; } = string.Empty;
     
-    public string CoverImageUrl { get; set; } = string.Empty;
-    
     public DateTime PublishedDate { get; set; } = DateTime.UtcNow;
 }

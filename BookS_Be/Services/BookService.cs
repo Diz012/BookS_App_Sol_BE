@@ -1,10 +1,12 @@
-﻿using BookS_Be.Models;
+﻿using BookS_Be.DTOs;
+using BookS_Be.Models;
 using BookS_Be.Repositories.Interfaces;
 using BookS_Be.Services.Interfaces;
+using MongoDB.Bson;
 
 namespace BookS_Be.Services;
 
-public class BookService(IBookRepository bookRepository) : IBookService
+public class BookService(IBookRepository bookRepository, ISupabaseService supabaseService) : IBookService
 {
     public async Task<List<Book>> GetAllBooksAsync()
     {
@@ -16,9 +18,46 @@ public class BookService(IBookRepository bookRepository) : IBookService
         return await bookRepository.GetByIdAsync(id);
     }
 
-    public async Task CreateAsync(Book book)
+    public async Task CreateAsync(AddBookDto bookDto, IFormFile file)
     {
-        await bookRepository.CreateAsync(book); 
+        var newId = ObjectId.GenerateNewId().ToString();
+
+        var book = new Book
+        {
+            Id = newId,
+            Title = bookDto.Title,
+            AuthorId = bookDto.AuthorId,
+            PublisherId = bookDto.PublisherId,
+            Isbn = bookDto.Isbn,
+            Price = bookDto.Price,
+            Stock = bookDto.Stock,
+            CategoryIds = bookDto.CategoryIds,
+            Description = bookDto.Description,
+            PublishedDate = bookDto.PublishedDate
+        };
+
+        if (file.Length > 0)
+        {
+            var extension = Path.GetExtension(file.FileName);
+            if (string.IsNullOrWhiteSpace(extension)) extension = ".bin";
+            var objectPath = $"{newId}/{Guid.NewGuid()}{extension}";
+            const string bucket = "book_cover";
+
+            await using var stream = file.OpenReadStream();
+            await supabaseService.UploadAsync(bucket, objectPath, stream, file.ContentType);
+
+            var publicUrl = supabaseService.GetPublicUrl(bucket, objectPath);
+            book.CoverImageUrl = string.IsNullOrWhiteSpace(publicUrl)
+                ? await supabaseService.CreatePresignedUrlAsync(bucket, objectPath)
+                : publicUrl;
+        }
+
+        await bookRepository.CreateAsync(book);
+
+        if (!string.IsNullOrWhiteSpace(book.CoverImageUrl))
+        {
+            await bookRepository.UpdateAsync(book.Id, book);
+        }
     }
 
     public async Task UpdateAsync(string id, Book book)

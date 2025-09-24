@@ -10,7 +10,7 @@ public class Publisher
     public string? Id { get; set; }
     
     [BsonElement("name")]
-    public required string Name { get; set; }
+    public required string Name { get; init; }
     
     [BsonElement("address")]
     public string Address { get; set; } = string.Empty;
