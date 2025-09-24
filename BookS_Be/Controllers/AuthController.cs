@@ -10,7 +10,7 @@ namespace BookS_Be.Controllers;
 /// Authentication controller for user registration and login
 /// </summary>
 [ApiController]
-[Route("api/auth")]
+[Route("api/[controller]")]
 [Produces("application/json")]
 public class AuthController (IUserService userService, IAuthService authService,IEmailService emailService, JwtHelper jwtHelper) : ControllerBase
 {
@@ -23,7 +23,7 @@ public class AuthController (IUserService userService, IAuthService authService,
     /// <response code="400">If the user data is invalid</response>
     /// <response code="409">If user with email already exists</response>
     /// <response code="500">If there was an internal server error</response>
-    [HttpPost("register")]
+    [HttpPost("[action]")]
     [ProducesResponseType(typeof(UserResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -95,7 +95,7 @@ public class AuthController (IUserService userService, IAuthService authService,
     /// <response code="400">If the login data is invalid</response>
     /// <response code="401">If authentication fails</response>
     /// <response code="500">If there was an internal server error</response>
-    [HttpPost("login")]
+    [HttpPost("[action]")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -140,7 +140,7 @@ public class AuthController (IUserService userService, IAuthService authService,
     /// <response code="200">If email is successfully verified</response>
     /// <response code="400">If the token is invalid or expired</response>
     /// <response code="500">If there was an internal server error</response>
-    [HttpGet("verify-email")]
+    [HttpGet("[action]")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
