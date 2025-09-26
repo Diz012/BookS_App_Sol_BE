@@ -15,4 +15,5 @@ public class AppDbContext(IMongoDatabase database)
     public IMongoCollection<Author> Authors => GetCollection<Author>("authors");
     public IMongoCollection<Publisher> Publishers => GetCollection<Publisher>("publishers");
     public IMongoCollection<Category> Categories => GetCollection<Category>("categories");
+    public IMongoCollection<UserBooks> UserBooks => GetCollection<UserBooks>("userBooks");
 }

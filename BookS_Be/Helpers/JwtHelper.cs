@@ -153,8 +153,13 @@ public class JwtHelper(IConfiguration configuration)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var jsonToken = tokenHandler.ReadJwtToken(token);
-            
-            return jsonToken.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            // Try ClaimTypes.NameIdentifier first, then "sub"
+            var userId = jsonToken.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                userId = jsonToken.Claims?.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            }
+            return userId;
         }
         catch
         {

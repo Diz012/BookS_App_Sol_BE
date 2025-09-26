@@ -13,4 +13,7 @@ public interface IBookRepository
     Task CreateAsync(Book book);
     Task UpdateAsync(string id, Book book);
     Task DeleteAsync(string id);
+    Task AddFavoriteAsync(string userId, string bookId);
+    Task RemoveFavoriteAsync(string userId, string bookId);
+    Task <List<Book>> GetUserFavoritesAsync(string userId);
 }
