@@ -71,10 +71,10 @@ public class BookRepository(AppDbContext context) : IBookRepository
         if(book == null) throw new Exception("Book not found");
         
         var exists = await context.UserBooks.Find(ub => ub.UserId == userId && ub.BookId == bookId).AnyAsync();
-        if (exists) throw new Exception("Book not in favorites");
+        if (!exists) throw new Exception("Book not in favorites");
         
         await context.UserBooks.DeleteOneAsync(ub => ub.UserId == userId && ub.BookId == bookId);
-        book.Stats.Favorites = Math.Max(0, book.Stats.Favorites--);
+        if(book.Stats.Favorites > 0) book.Stats.Favorites--;
         await UpdateAsync(bookId, book);
     }
     

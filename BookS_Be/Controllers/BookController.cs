@@ -117,14 +117,9 @@ public class BookController(IBookService bookService, JwtHelper jwtHelper) : Con
             }
             
             var token = authHeader.Substring("Bearer ".Length).Trim();
-            var principal = jwtHelper.ValidateToken(token);
             
-            if (principal == null)
-            {
-                return Unauthorized(new { message = "Invalid token." });
-            }
+            var userId = JwtHelper.GetUserIdFromToken(token);
             
-            var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
             {
                 return Unauthorized(new { message = "User ID not found in token." });
@@ -170,14 +165,8 @@ public class BookController(IBookService bookService, JwtHelper jwtHelper) : Con
             }
             
             var token = authHeader.Substring("Bearer ".Length).Trim();
-            var principal = jwtHelper.ValidateToken(token);
             
-            if (principal == null)
-            {
-                return Unauthorized(new { message = "Invalid token." });
-            }
-            
-            var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = JwtHelper.GetUserIdFromToken(token);
             
             if (string.IsNullOrWhiteSpace(userId))
             {
