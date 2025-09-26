@@ -51,4 +51,37 @@ public class BookRepository(AppDbContext context) : IBookRepository
     {
         await context.Books.DeleteOneAsync(b => b.Id == id);
     }
+    
+    public async Task AddFavoriteAsync(string userId, string bookId)
+    {
+        var book = await GetByIdAsync(bookId);
+        if(book == null) throw new Exception("Book not found");
+        
+        var exists = await context.UserBooks.Find(ub => ub.UserId == userId && ub.BookId == bookId).AnyAsync();
+        if (exists) throw new Exception("Book already in favorites");
+        
+        await context.UserBooks.InsertOneAsync(new UserBooks { UserId = userId, BookId = bookId });
+        book.Stats.Favorites++;
+        await UpdateAsync(bookId, book);
+    }
+    
+    public async Task RemoveFavoriteAsync(string userId, string bookId)
+    {
+        var book = await GetByIdAsync(bookId);
+        if(book == null) throw new Exception("Book not found");
+        
+        var exists = await context.UserBooks.Find(ub => ub.UserId == userId && ub.BookId == bookId).AnyAsync();
+        if (exists) throw new Exception("Book not in favorites");
+        
+        await context.UserBooks.DeleteOneAsync(ub => ub.UserId == userId && ub.BookId == bookId);
+        book.Stats.Favorites = Math.Max(0, book.Stats.Favorites--);
+        await UpdateAsync(bookId, book);
+    }
+    
+    public async Task<List<Book>> GetUserFavoritesAsync(string userId)
+    {
+        var favoriteBookIds = await context.UserBooks.Find(ub => ub.UserId == userId).ToListAsync();
+        var bookIds = favoriteBookIds.Select(ub => ub.BookId).ToList();
+        return await context.Books.Find(b => b.Id != null && bookIds.Contains(b.Id)).ToListAsync();
+    }
 }

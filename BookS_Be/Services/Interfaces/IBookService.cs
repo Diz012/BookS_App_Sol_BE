@@ -10,4 +10,7 @@ public interface IBookService
     Task CreateAsync(AddBookDto bookDto, IFormFile file);
     Task UpdateAsync(string id, Book book);
     Task DeleteAsync(string id);
+    Task AddFavoriteBookAsync(string userId, string bookId);
+    Task RemoveFavoriteBookAsync(string userId, string bookId);
+    Task<List<Book>> GetUserFavoriteBooksAsync(string userId);
 }

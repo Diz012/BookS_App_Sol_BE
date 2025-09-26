@@ -41,4 +41,7 @@ public class Book
     
     [BsonElement("publishedDate")]
     public DateTime PublishedDate { get; set; }
+    
+    [BsonElement("stats")]
+    public BookStats Stats { get; set; } = new();
 }

@@ -69,4 +69,19 @@ public class BookService(IBookRepository bookRepository, ISupabaseService supaba
     {
         await bookRepository.DeleteAsync(id);
     }
+    
+    public async Task AddFavoriteBookAsync(string userId, string bookId)
+    {
+        await bookRepository.AddFavoriteAsync(userId, bookId);
+    }
+    
+    public async Task RemoveFavoriteBookAsync(string userId, string bookId)
+    {
+        await bookRepository.RemoveFavoriteAsync(userId, bookId);
+    }
+    
+    public async Task<List<Book>> GetUserFavoriteBooksAsync(string userId)
+    {
+        return await bookRepository.GetUserFavoritesAsync(userId);
+    }
 }
